@@ -3,13 +3,14 @@ add_library(Blokk STATIC
     ../GameObjects/Position.cpp
     ../GameObjects/Velocity.cpp
     ../GameObjects/Visibility.cpp
+    ../GameObjects/GameObject.cpp
 
     IncrementFrames.cpp
     Threading.cpp
     UserUpdates.cpp
     Velocities.cpp
-    Visibility_AxisCulling.cpp
-    Visibility_BasicCulling.cpp
+    Visibility_Culling/Visibility_AxisCulling.cpp
+    Visibility_Culling/Visibility_BasicCulling.cpp
 )
 
 target_include_directories(Blokk
@@ -23,5 +24,7 @@ target_include_directories(Blokk
 target_link_libraries(Blokk
     PRIVATE
         SDL3::SDL3
-        SDL3_image::SDL3_image
+        xsimd
+        imgui
+        BFCL
 )

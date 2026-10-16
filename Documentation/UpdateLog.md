@@ -75,7 +75,7 @@ With **ARM NEON support, scalar SIMD fallbacks, improved SIMD detection, persist
   * `CreateNewEmptyAnimation()`
   * `AddFrameToAnimation()`
   * `CreateAnimation()`
-* Added texture and per-frame dimension storage to `ObjectManager`.
+* Added texture and per-frame dimension storage to `EngineCore`.
 * Added rendering object index tracking.
 
 ## Camera
@@ -88,12 +88,12 @@ With **ARM NEON support, scalar SIMD fallbacks, improved SIMD detection, persist
   * `SetYPosition()`
   * `ChangeXPosition()`
   * `ChangeYPosition()`
-* Added support for accessing the camera through the `ObjectManager`.
+* Added support for accessing the camera through the `EngineCore`.
 
 ## Engine Architecture
 
 * Reworked animation functionality to separate rendering functions from animation data.
-* Updated `ObjectManager` to support the new rendering architecture.
+* Updated `EngineCore` to support the new rendering architecture.
 * Added conditional rendering support through `Blokk_Rendering_Enabled`.
 * Updated engine CMake configuration for SDL3_image.
 * Added SDL_image as a vendored Git submodule.
@@ -157,7 +157,7 @@ With **ARM NEON support, scalar SIMD fallbacks, improved SIMD detection, persist
 
 ### Threading
 
-* Adjusted thread initialization so the worker's static `ObjectManager` reference is set **before** opening the worker thread.
+* Adjusted thread initialization so the worker's static `EngineCore` reference is set **before** opening the worker thread.
 * This fixes initialization ordering and makes the worker setup more reliable.
 
 ### Rendering
