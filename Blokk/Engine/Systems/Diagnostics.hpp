@@ -73,19 +73,6 @@ public:
     }
     #endif
 
-    void SetTargetExecutionTime(double Time)
-    {
-        // Make sure time isn't negative
-        if (Time <= 0)
-        {
-            throw std::invalid_argument(
-                "Blokk error: Tried to set frame time to negative value or 0."
-            );
-        }
-
-        TargetExecutionTime = Time;
-    }
-
     uint32_t GetSIMDRegisterSize() const
     {
         switch (SIMDRegisterLevel)

@@ -18,16 +18,7 @@
 // concrete SDL types are required.
 struct SDL_Texture;
 
-// Get correct default values
-#ifndef Blokk_Rendering_CullType
-#define Blokk_Rendering_CullType 1 // Axis culling
-#endif
-
-#ifndef Blokk_Thread_Control
-    #ifndef Blokk_Thread_AdaptiveTiming
-        #define Blokk_Thread_AdaptiveTiming
-    #endif
-#endif
+// Configuration macros are handled in CMake. Check "Cmake/JSONParser.cmake"
 
 #include "types.hpp"
 #include "SIMD_Finder.hpp"
@@ -181,62 +172,47 @@ namespace Blokk
         ~EngineCore()
         {
             // Destroy all threads
-            for(uint32_t i = 0; i < OpenedThreads; i++)
-            {
+            for(uint32_t i = 0; i < OpenedThreads; i++) {
                 DestroyThread();
             }
         }
 
         void EngineProcess();
 
-        #ifdef Blokk_Thread_FixedCount
-        void SetThreadCount(uint32_t Count);
-        #endif
-
         // Camera
         #ifdef Blokk_CamEnabled
             CameraController Camera;
         #endif
 
-        #ifdef Blokk_Thread_Control
-
-        void OpenThread()
-        {
-            if(OpenedThreads == ThreadCount)
-            {
-                throw std::out_of_range(
-                    "Blokk error: Cannot create another thread because the maximum thread count has been reached."
-                );
-            }
-
-            Workers.emplace_back(std::make_unique<Worker>());
-            Workers.back()->Awake();
-
-            OpenedThreads++;
-        }
-
-        void DestroyThread()
-        {
-            if(OpenedThreads == 1)
-            {
-                throw std::out_of_range(
-                    "Blokk error: Cannot destroy another thread because the minimum thread count has been reached (1)."
-                );
-            }
-
-            Workers.back()->Stop();
-            Workers.pop_back();
-
-            OpenedThreads--;
-        }
-
+        // Functions the user can call if manual threading enabled
+        #ifdef Blokk_Threading_Manual
+        void SetThreadCount(uint32_t Count); // Set the number of threads
+        void OpenThread(); // Create a thread
+        void DestroyThread(); // Destroy a thread
         #endif
 
         #ifdef Blokk_Threading_AdaptiveTiming
 
         // Adaptive threading system flags
-        void StopAdaptiveThreadingSystem();
-        void EnableAdaptiveThreadingSystem();
+        void StopAdaptiveThreadingSystem() { // Disable
+            AdaptiveThreadingEnabled = false;
+        }
+        void EnableAdaptiveThreadingSystem() { // Enable
+            AdaptiveThreadingEnabled = true;
+        }
+
+        void SetTargetExecutionTime(double Time)
+        {
+            // Make sure time isn't negative
+            if (Time <= 0)
+            {
+                throw std::invalid_argument(
+                    "Blokk error: Tried to set frame time to negative value or 0."
+                );
+            }
+
+            TargetExecutionTime = Time;
+        }
 
         #endif
 
@@ -250,15 +226,9 @@ namespace Blokk
         // Animations
         #ifdef Blokk_Rendering_Enabled
 
-        #if (Blokk_Rendering_CullType == 2) // Spatial partioning
-            Tree<uint8_t> IsVisible;
-            Tree<uint32_t> AnimNums;
-            Tree<uint32_t> FrameNums;
-        #else
-            std::vector<uint8_t> IsVisible;
-            std::vector<uint32_t> FrameNums;
-            std::vector<uint32_t> AnimNums;
-        #endif
+        std::vector<uint8_t> IsVisible;
+        std::vector<uint32_t> FrameNums;
+        std::vector<uint32_t> AnimNums;
 
         // Stores the animation names, points to an index in the animations
         std::unordered_map<std::string, uint32_t> AnimNames;
@@ -288,7 +258,7 @@ namespace Blokk
         // Frmae timings -----------------------------
         struct Timings
         {
-            std::chrono::duration<double> secs = 0;
+            std::chrono::duration<double> secs{0};
             std::chrono::duration<double, std::milli> milli;
             std::chrono::duration<double, std::micro> micro;
             std::chrono::duration<double, std::nano> nano = nanoseconds_zero;
@@ -342,7 +312,7 @@ namespace Blokk
 		LoadingStage CurrentLoadingStage; // Current loading stage of the engine
 		float CurrentPercentage; // Current percentage of the current loading stage
 		uint32_t CurrentLoadingObjectIdx; // Current object index being processed for the current loading stage
-    
+        uint32_t NumberOfTrials; 
 
         // Workers
 		uint32_t ThreadCount; // Total number of threads available on the system
@@ -426,25 +396,7 @@ namespace Blokk
         }
 
 
-        #ifndef Blokk_Thread_Control
-
-        void OpenThread()
-        {
-            Workers.emplace_back(std::make_unique<Worker>());
-            Workers.back()->Awake();
-
-            OpenedThreads++;
-        }
-
-        void DestroyThread()
-        {
-            Workers.back()->Stop();
-            Workers.pop_back();
-
-            OpenedThreads--;
-        }
-
-        #endif
+        
 
         // Time engine processes -------------------------------------
 
@@ -489,11 +441,9 @@ namespace Blokk
 
         // Adding objects ----------------------------------------------------
 
-        template <GameObjectTypes T>
-        void ProcessAddCommand(EngineObjectCreationParams<T> Fields);
+        void ProcessAddCommand(EngineObjectCreationParams Fields);
 
-        template <GameObjectTypes T>
-        void ProcessAddCommand(bool Visible, vector2<float> Velocity, vector2<float> Position, T* Object);
+        void ProcessAddCommand(bool Visible, vector2<float> Velocity, vector2<float> Position, GameObject* Object);
 
         // Frame increment --------------------------------------------
 
@@ -507,7 +457,6 @@ namespace Blokk
 
         void UpdateObjects();
         void TimeUpdateRangeOfObjects(Worker& worker);
-        void LoadEngine();
         void ResetUpdateTimes();
         void UpdateTimeVariables();
         void ProcessRange(IndexRange range);
@@ -516,7 +465,9 @@ namespace Blokk
         void StealUpdateObjects(uint32_t idx);
         void GetAverageUpdateTimes();
         void Remove_Function(uint32_t idx);
-
+        
         #endif
+
+        void LoadEngine(uint32_t Threading_NumberOfTests);
     };
 }

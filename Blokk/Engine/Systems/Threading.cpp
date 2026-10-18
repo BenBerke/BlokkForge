@@ -13,6 +13,59 @@
 namespace Blokk
 {
 
+#ifdef Blokk_Threading_Manual
+
+    void EngineCore::SetThreadCount(uint32_t Count) {
+        if (Count < 1 || Count > ThreadCount) {
+            throw std::out_of_range(
+                "BlokkForge: Invalid count passed in EngineCore::SetThreadCount."
+            );
+        }
+
+        if (Count < OpenedThreads) {
+            while (OpenedThreads != Count) {
+                DestroyThread();
+            }
+        }
+        else if (Count > OpenedThreads) {
+            while (OpenedThreads != Count) {
+                OpenThread();
+            }
+        }
+    }
+
+    void EngineCore::OpenThread()
+    {
+        if (OpenedThreads == ThreadCount)
+        {
+            throw std::out_of_range(
+                "Blokk error: Cannot create another thread because the maximum thread count has been reached."
+            );
+        }
+
+        Workers.emplace_back(std::make_unique<Worker>());
+        Workers.back()->Awake();
+
+        OpenedThreads++;
+    }
+
+    void EngineCore::DestroyThread()
+    {
+        if (OpenedThreads == 1)
+        {
+            throw std::out_of_range(
+                "Blokk error: Cannot destroy another thread because the minimum thread count has been reached (1)."
+            );
+        }
+
+        Workers.back()->Stop();
+        Workers.pop_back();
+
+        OpenedThreads--;
+    }
+
+#endif
+
 // Executes all the engine processes, returning the time it took to execute all of them
 double EngineCore::TimeEngineProcesses()
 {
@@ -156,7 +209,7 @@ double EngineCore::TimeEngineProcesses()
     return TotalTime;
 }
 
-#ifdef Blokk_Thread_AdaptiveTiming
+#ifdef Blokk_Threading_AdaptiveTiming
 
 // Main processing function for the user to call
 // Handles thread adpating
@@ -224,15 +277,8 @@ void EngineCore::EngineProcess()
     PrevFrameTime = FrameExecutionTime;
 }
 
-void EngineCore::StopAdaptiveThreadingSystem() {
-    AdaptiveThreadingEnabled = false;
-}
 
-void EngineCore::EnableAdaptiveThreadingSystem() {
-    AdaptiveThreadingEnabled = true;
-}
-
-#elif defined(Blokk_Thread_FixedCount)
+#elif defined(Blokk_Threading_FixedCount)
 
 // Main function
 void EngineCore::EngineProcess()
@@ -455,6 +501,8 @@ void EngineCore::ResetUpdateTimes() {
     std::fill(AverageUpdateTimes.begin(), AverageUpdateTimes.end(), 0);
 }
 
+#endif // Blokk_GameObjects_UpdateFunctions
+
 // TODO: Make loading function smoother, currently can stutter
 // Loads the engine. It adapts to the load, allowing other
 void EngineCore::LoadEngine(uint32_t Threading_NumberOfTests)
@@ -594,11 +642,11 @@ void EngineCore::LoadEngine(uint32_t Threading_NumberOfTests)
     // Allow user to update their loading screen
     return;
 
-#endif // Blokk_GameObjects:UpdateFunctions
+#endif // Blokk_GameObject_UpdateFunctions
 
     // Adapt threading --------------------------------
 
-#ifdef Blokk_Thread_AdaptiveTiming
+#ifdef Blokk_Threading_AdaptiveTiming
 
     if (CurrentLoadingStage == LoadingStage::AdaptiveThreading) 
     {
@@ -611,15 +659,19 @@ void EngineCore::LoadEngine(uint32_t Threading_NumberOfTests)
         return;
     }
 
-#endif // Blokk_Thread_AdaptiveTiming
+#endif // Blokk_Threading_AdaptiveTiming
 
 }
+
+#ifdef Blokk_GameObjects_UpdateFunctions
 
 inline void EngineCore::Remove_Function(uint32_t idx) {
     UpdateFunctionsSet[idx] = false;
     UpdatePriorities[idx] = UINT8_MAX;
     AverageUpdateTimes[idx] = nanoseconds_zero;
 }
+
+#endif
 
 #ifdef Blokk_Rendering_Enabled
 
