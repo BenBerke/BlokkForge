@@ -1,45 +1,34 @@
-# Configuration Macros
+# Configurations
 
-These are macros that you can define to change the engine's behavior.
+These are configuration options you can set to change the engine's behavior and add specific features.
+These are all configured inside a JSON file. You need to pass the JSON file path to compile the engine. 
 
-> Make sure to **define these before including the engine**.
-For example:
-```cpp
-#define Blokk_CamEnabled
-#define Blokk_Diagnostics
-#define Blokk_Thread_Control
+You can do that via a command line switch. The compilation command is: 
+`cmake -B (folder_for_build) -S . -DBLOKK_CONFIG_FILE=(file_to_configuration_JSON_file)` and then 
+`cmake --build build --config Release`. Remember to replace the text inside the paranthesis with what it actually needs!
 
-#include <Blokk/Blokk.hpp>
-
-int main()
-{
-    // ...
-}
-```
-
+Here are some of the configurable options:
 * [Camera](#camera)
 * [Diagnostics](#diagnostics)
 * [Render Culling Systems](#render-culling-systems)
-* [Thread Control](#thread-control)
+* [Threading Systems](#threading-systems)
+* [SIMD preferences](#simd-preferences)
+
+## Setting features
+
+To enable any feature that is either enabled or disabled, you can set it's type to `"true"` (or any of the other JSON true values, such as `1` or `yes`. Note that it is not case sensitive as it converts to uppercase before checking, meaning that you can write `true` or `True` or even `TrUe` and it'll have the same effect). Most features, if not set, are defaulted to `false`, or not enabled.
 
 | Feature        | Macro                                                       | Default  |
 | -------------- | ----------------------------------------------------------- | -------- |
-| Camera         | `Blokk_CamEnabled`                                          | Disabled |
-| Diagnostics    | `Blokk_Diagnostics`                                         | Disabled |
-| Thread Control | `Blokk_Thread_Control`                                      | Disabled |
-| Thread System  | `Blokk_Threads_AdaptiveTiming` / `Blokk_Threads_FixedCount` | Adaptive |
-| Culling        | `Blokk_Render_CullingType`                                  | Axis, `1` |
+| Camera         | `"camera_enabled": "true"`                                  | Disabled |
+| Diagnostics    | `"diagnostics": "true"`                                     | Disabled |
+| Threading System | `"threading_type": "manual"` OR `"threading_type": "adaptive"` | Adaptive |
+| Render Culling Type  | `"render_culling_type": "axis"` OR `"render_culling_type": "basic"` | Axis |
 
 
 ## Camera
 
 The camera is an optional feature that lets you move the view around the game world. When enabled, objects are rendered relative to the camera's position, so moving the camera changes which part of the world is shown on screen.
-
-To enable the camera, add:
-
-```cpp
-#define Blokk_CamEnabled
-```
 
 You can set or change the camera's position using these functions:
 
@@ -195,10 +184,27 @@ Render
 
 AxisCulling is especially useful when most objects are far outside the viewport, because objects can be rejected without performing the complete visibility check.
 
-## Thread control
+## Threading Systems
 
-Blokk has a feature called thread control. Use it by defining `Blokk_Thread_Control`.
-Using it, you can manually destroy/create threads for the engine to use.
+Blokk has 2 threading systems:
+* Adaptive
+* Manual
+
+The default is adaptive timing.
+
+### 1. Adaptive
+
+The adaptive timing systems lets the engine handle the threads and adapts to efficiently handle the amount of work the engine has to complete by timing the time it takes to execute.
+
+The system first **opens all available threads at the start of the program**. It'll **control the emount of threads used, not the amount of threads open**, because thread creation and destruction is expensive, to avoid lag or stuttering. 
+
+The engine will time all the systems and see if the time taken to execute all the systems is greater than the amount of time it is targeting (defaulting to 80% of the frame time but can be change using `SetTargetExecutionTime(double);`)
+
+If the time taken to execute all it's systems is greater than the target time, it'll **start using another thread and then time it again. If the time was worse than last time, it'll stop using that thread**. It keeps track of how many threads it's currently using using a counter.
+
+### 2. Manual
+
+The manual threading means that the user is responsible for manually telling the engine to create or destroy threads. It doesn't effect how the engine actually uses those threads.
 
 Here are the basic functions:
 
@@ -209,12 +215,79 @@ Here are the basic functions:
 |`SetThreadCount();` | Set the engine's thread count
 
 > **NOTE:**
-> Avoid creating or destroying threads every frame as it can be expensive
+> Avoid creating or destroying threads every frame as it can be expensive. Trying to set the thread count to an invalid number (such as 0 or greater than the hardware thread count) will result in an error.
 
-Another feature blokk has is to decide what thread system to use. There are 2 types:
-* Adaptive timing (default, `Blokk_Threads_AdaptiveTiming`)
-* Fixed count (default for thread control, `Blokk_Threads_FixedCount`)
+## SIMD Preferences
 
-With a fixed count, you'll need to manually manage the threads, but with adaptive, the engine will manually create or destroy threads itself.
+The engine uses SIMD to process multiple pieces of data at once under the hood to speed up execution time. The engine will automatically select the correct SIMD type **at runtime**, ensuring multiple different versions don't have to be compiled to support every type.
 
+While the engine does select the best supported type at runtime, the user can choose which types they want to support. You can do this by giving the engine the types of SIMD it should check for. The engine currently supports:
 
+### Using MSVC
+
+| JSON Configuration Type
+| -------------------------
+| "avx512vnni"
+| "avx512vbmi2"
+| "avx512vbmi"
+| "avx512ifma"
+| "avx512"
+| "avxvnni"
+| "avx2"
+| "avx"
+| "sse4_2"
+| "sse4_1"
+| "ssse3"
+| "sse3"
+| "sse2"
+
+### Using GCC / Clang
+
+| JSON Configuration Type
+|-----------------------
+| "avx512vnni"
+| "avx512vbmi2"
+| "avx512vbmi"
+| "avx512ifma"
+| "avx512"
+| "avxvnni"
+| "avx2"
+| "avx"
+| "sse4_2"
+| "sse4_1"
+| "ssse3"
+| "sse3"
+| "sse2"
+| "i8mm"
+| "neon64"
+| "neon"
+| "sve512"
+| "sve256"
+| "sve128"
+| "rvv512"
+| "rvv256"
+| "rvv128"
+| "vsx"
+| "vxe"
+| "wasm"
+
+### Putting them into the JSON
+
+With all your types, now you can put them into your JSON. You need to define `simd_preferences` and then give a list of all the type you want. 
+
+For example:
+```json
+"simd_preferences": [
+	"avx2",
+	"avx",
+	"sse3",
+	"sse2"
+
+	# And then any more you would want
+],
+
+# Other configurations
+
+```
+
+**Make sure to type them exactly as in the tables above, or else it'll throw an error.**
