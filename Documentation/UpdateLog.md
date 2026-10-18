@@ -1,3 +1,17 @@
+# v0.1.9
+> not completed yet
+
+### Fixes
+* Made `SetTargetExecutionTime(double)` public inside the `EngineCore` class instead of inside the `Diagnostics` class
+* Implemented `SetThreadCount(uint32_t)` - was declared but not defined
+
+### CMake 
+* Changed configuration macros to JSON configuration
+* Removed macro logic outside of EngineClassData.hpp and into CMake
+* Moved CMake into CMake/ directory and split into 3 files for organization (Data, CMakeLists, JSONParser)
+* Updated documentation for threading systems and CMake build commands
+* Made compiler support guardrails to SIMD types
+
 # v0.1.8
 > 9/6/2026
 
