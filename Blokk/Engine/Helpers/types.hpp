@@ -152,17 +152,12 @@ class ObjectAnimations {
 };
 
 class GameObject;
-class CachedGameObject;
 
-template<typename T>
-concept GameObjectTypes = std::same_as<T, GameObject> || std::same_as<T, CachedGameObject>;
-
-template<GameObjectTypes T>
 struct EngineObjectCreationParams {
     bool visible;
     vector2<float> velocity;
     vector2<float> position;
-    T& Object;
+    GameObject& Object;
 };
 
 struct ObjectCreationParams {
