@@ -13,12 +13,11 @@ void ProcessVelocities_SIMD(
     float* PosY,
     const float* VelX,
     const float* VelY,
-    std::uint32_t Size
+    const std::uint32_t Size,
+    const double delta
 ) {
     using Batch = xsimd::batch<float, Arch>;
     constexpr std::size_t Lanes = Batch::size;
-
-    Uint64 delta = SDL_GetTicks();
 
     std::uint32_t i = 0;
     for (; i + Lanes <= Size; i += Lanes)

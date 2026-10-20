@@ -31,7 +31,7 @@ GameObject::GameObject(
     EngineIdx(0),
     IsVisible(true)
 {
-    Engine->ProcessAddCommand<GameObject>(
+    Engine->ProcessAddCommand(
         visible,
         velocity,
         position,

@@ -69,9 +69,6 @@ namespace Blokk
 // Executes all the engine processes, returning the time it took to execute all of them
 double EngineCore::TimeEngineProcesses()
 {
-    // Get the delta time
-    deltaTime = SDL_GetTicks();
-
     // Get the total start time
     auto TotalStartTime = std::chrono::steady_clock::now();
 
@@ -211,10 +208,31 @@ double EngineCore::TimeEngineProcesses()
 
 #ifdef Blokk_Threading_AdaptiveTiming
 
+void EngineCore::DeltaTiming() {
+    // Delta timing
+    PreviousExecutionStartTime = CurrentExecutionStartTime;
+    CurrentExecutionStartTime = SDL_GetPerformanceCounter();
+
+    // Calculate raw hardware ticks passed during the frame
+    Uint64 rawTicks = CurrentExecutionStartTime - PreviousExecutionStartTime;
+
+    // Convert ticks to fractional seconds (double) using SDL's frequency
+    double seconds = (double)rawTicks / (double)SDL_GetPerformanceFrequency();
+
+    // Store the seconds in struct (std::chrono handles the conversions automatically)
+    DeltaTime.secs = std::chrono::duration<double>(seconds);
+    DeltaTime.milli = std::chrono::duration_cast<std::chrono::duration<double, std::milli>>(DeltaTime.secs);
+    DeltaTime.micro = std::chrono::duration_cast<std::chrono::duration<double, std::micro>>(DeltaTime.secs);
+    DeltaTime.nano = std::chrono::duration_cast<std::chrono::duration<double, std::nano>>(DeltaTime.secs);
+}
+
 // Main processing function for the user to call
 // Handles thread adpating
 void EngineCore::EngineProcess()
 {
+    // Calculate the delta
+    DeltaTiming();
+
     FrameExecutionTime = TimeEngineProcesses();
 
     // If not enabled, don't try to adapt!
@@ -278,7 +296,7 @@ void EngineCore::EngineProcess()
 }
 
 
-#elif defined(Blokk_Threading_FixedCount)
+#elif defined(Blokk_Threading_Manual)
 
 // Main function
 void EngineCore::EngineProcess()
@@ -450,11 +468,13 @@ void EngineCore::ProcessRange(IndexRange range)
 	uint32_t remainingInRange = range.GetSize();
     uint32_t currentObjIdx = range.Start;
 
+    double delta = DeltaTime.secs;
+
     // Keep processing until no more objects are left in the range
     while (remainingInRange != 0)
     {
         // Process the object
-        ObjectInstances[currentObjIdx]->_Update();
+        ObjectInstances[currentObjIdx]->_Update(delta);
 
         remainingInRange--;
         currentObjIdx++;
@@ -468,13 +488,15 @@ void EngineCore::TimeUpdateRangeOfObjects(Worker& worker)
 {
     IndexRange Range = worker.getRange();
 
+    double delta = DeltaTime.secs;
+
 	for (uint32_t i = Range.Start, count = Range.End; i < count; i++)
 	{
 		// Start time
 		auto start = std::chrono::steady_clock::now();
 
 		// Run function
-		ObjectInstances[i]->_Update();
+		ObjectInstances[i]->_Update(delta);
 
 		// End time
 		auto end = std::chrono::steady_clock::now();

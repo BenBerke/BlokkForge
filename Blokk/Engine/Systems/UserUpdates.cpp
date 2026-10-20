@@ -44,9 +44,12 @@ void EngineCore::DestroyDynamicObject(uint32_t ObjIdx)
     ObjectCount--;
 }
 
-template <GameObjectTypes T>
-void EngineCore::ProcessAddCommand(bool Visible, vector2<float> Velocity, vector2<float> Position, T* Object)
+void EngineCore::ProcessAddCommand(bool Visible, vector2<float> Velocity, vector2<float> Position, GameObject* Object)
 {
+    if (Object == nullptr) {
+        throw std::runtime_error("BlokkForge: GameObject pointer passed as nullptr");
+    }
+
     float XVel = Velocity.x;
     float YVel = Velocity.y;
 
@@ -103,8 +106,7 @@ void EngineCore::ProcessAddCommand(bool Visible, vector2<float> Velocity, vector
     ObjectCount++;
 }
 
-template <GameObjectTypes T>
-void EngineCore::ProcessAddCommand(EngineObjectCreationParams<T> Fields) {
+void EngineCore::ProcessAddCommand(EngineObjectCreationParams Fields) {
     ProcessAddCommand(Fields.Velocity, Fields.Position, Fields.Object, Fields.Visible);
 }
 

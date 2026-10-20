@@ -167,10 +167,18 @@ namespace Blokk
 
             // Get the proper functions
             GetFunctions();
+
+            // Get starting delta variable
+            CurrentExecutionStartTime = SDL_GetPerformanceCounter();
         }
 
         ~EngineCore()
         {
+            // Destroy all objects
+            for (uint32_t i = 0; i < ObjectCount; i++) {
+                delete ObjectInstances[i];
+            }
+
             // Destroy all threads
             for(uint32_t i = 0; i < OpenedThreads; i++) {
                 DestroyThread();
@@ -216,6 +224,18 @@ namespace Blokk
 
         #endif
 
+        // Load a list of objects
+        void LoadObjects(const std::vector<ObjectCreationParams>& ObjectData) {
+            uint32_t count = ObjectData.size();
+            ObjectInstances.reserve(count);
+            for (uint32_t i = 0; i < count; i++) 
+            {
+                // Create a new instance. Doesn't need any extra code here because object 
+                // manually tells engine to register itself already
+                new GameObject(ObjectData[i]); 
+            }
+        }
+
     // PRIVATE -------------------------------------------
     private:
 
@@ -258,18 +278,19 @@ namespace Blokk
         // Frmae timings -----------------------------
         struct Timings
         {
-            std::chrono::duration<double> secs{0};
-            std::chrono::duration<double, std::milli> milli;
-            std::chrono::duration<double, std::micro> micro;
+            std::chrono::duration<double> secs{ 0 };
+            std::chrono::duration<double, std::milli> milli{ 0 };
+            std::chrono::duration<double, std::micro> micro{ 0 };
             std::chrono::duration<double, std::nano> nano = nanoseconds_zero;
         };
         Timings FrameTime;
         Timings TargetExecutionTime;
         uint32_t FPS;
-        Uint64 deltaTime;
-
-        // TODO: Add a new vector of booleans to detect whether the function has actually been set
-        // to avoid calling an empty for a potential performance increase
+        
+        // Delta timing
+        Uint64 PreviousExecutionStartTime;
+        Uint64 CurrentExecutionStartTime;
+        Timings DeltaTime;
 
         // Work stealing system (for gameObject update functions)
         #ifdef Blokk_GameObjects_UpdateFunctions
@@ -327,7 +348,6 @@ namespace Blokk
         double FrameExecutionTime;
         double PrevFrameTime;
         double TargetExecutionTime;
-        
 
         std::vector<std::unique_ptr<Worker>> Workers;
 
@@ -399,6 +419,9 @@ namespace Blokk
         
 
         // Time engine processes -------------------------------------
+
+        // Calculates delta
+        void DeltaTiming();
 
         // Execute engine processes and time it
         double TimeEngineProcesses();

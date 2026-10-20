@@ -20,9 +20,11 @@ void EngineCore::UpdateRangeOfPositions(Worker& worker)
 
     const std::uint32_t Size = Range.GetSize();
 
+    const delta = DeltaTime.secs;
+
     auto Process = [&]<typename Arch>()
     {
-        ProcessVelocities_SIMD<Arch>(XPos, YPos, XVel, YVel, Size);
+        ProcessVelocities_SIMD<Arch>(XPos, YPos, XVel, YVel, Size, delta);
     };
 
 #ifdef Blokk_Support_SIMD_AVX512VNNI
