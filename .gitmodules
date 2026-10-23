@@ -10,3 +10,6 @@
 [submodule "vendored/BFCL"]
 	path = vendored/BFCL
 	url = https://github.com/hammykat/BFCL.git
+[submodule "vendored/glfw"]
+	path = vendored/glfw
+	url = https://github.com/glfw/glfw
