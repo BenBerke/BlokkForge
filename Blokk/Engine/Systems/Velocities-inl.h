@@ -23,11 +23,11 @@ void ProcessVelocities_SIMD(
     std::uint32_t i = 0;
     for (; i + Lanes <= Size; i += Lanes)
     {
-        const Batch XPos = xsimd::load_unaligned(PosX + i);
-        const Batch YPos = xsimd::load_unaligned(PosY + i);
+        const Batch XPos = Batch::load_unaligned(PosX + i);
+        const Batch YPos = Batch::load_unaligned(PosY + i);
 
-        const Batch XVel = xsimd::load_unaligned(VelX + i);
-        const Batch YVel = xsimd::load_unaligned(VelY + i);
+        const Batch XVel = Batch::load_unaligned(VelX + i);
+        const Batch YVel = Batch::load_unaligned(VelY + i);
 
         const Batch NewXPos = (XPos + XVel) * delta;
         const Batch NewYPos = (YPos + YVel) * delta;

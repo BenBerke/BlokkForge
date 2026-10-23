@@ -5,7 +5,7 @@ project(Blokk
     LANGUAGES CXX
 )
 
-set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
@@ -47,4 +47,11 @@ add_subdirectory(vendored/xsimd EXCLUDE_FROM_ALL)
 add_subdirectory(vendored/BFCL)
 
 # Blokk engine
-add_subdirectory(Blokk/Engine/Systems)
+add_subdirectory(Blokk/Engine/Systems/CMake)
+
+# OpenAL
+# Turn off extra builds which slows things down
+set(ALSOFT_UTILS    OFF CACHE BOOL "" FORCE)
+set(ALSOFT_EXAMPLES OFF CACHE BOOL "" FORCE)
+set(ALSOFT_INSTALL  OFF CACHE BOOL "" FORCE)
+add_subdirectory(vendored/openal-soft)

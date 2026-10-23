@@ -11,6 +11,21 @@ add_library(Blokk STATIC
     ../Velocities.cpp
     ../Visibility_Culling/Visibility_AxisCulling.cpp
     ../Visibility_Culling/Visibility_BasicCulling.cpp
+    ../Sound.cpp
+    ../Sound.hpp
+
+    ../../Math/Constants.hpp
+    ../../Math/MathHelpers.hpp
+    ../../Math/Geometry/Geometry.hpp
+    ../../Math/Matrix/Matrix4.hpp
+    ../../Math/Quaternion/Quaternion.hpp
+    ../../Math/Quaternion/QuaternionMath.hpp
+    ../../Math/SIMD/SSECompat.hpp
+    ../../Math/Vector/Vector2.hpp
+    ../../Math/Vector/Vector2Math.hpp
+    ../../Math/Vector/Vector3.hpp
+    ../../Math/Vector/Vector3Math.hpp
+    ../../Math/Vector/Vector4.hpp
 )
 
 target_include_directories(Blokk
@@ -18,6 +33,7 @@ target_include_directories(Blokk
         ${CMAKE_CURRENT_SOURCE_DIR}/../../../Include
         ${CMAKE_CURRENT_SOURCE_DIR}/../../GameObjects
         ${CMAKE_CURRENT_SOURCE_DIR}/../../Helpers
+        ${CMAKE_CURRENT_SOURCE_DIR}/../../Math
         ${CMAKE_CURRENT_SOURCE_DIR}/..
 )
 
@@ -27,6 +43,7 @@ target_link_libraries(Blokk
         xsimd
         imgui
         BFCL
+        OpenAL::OpenAL
 )
 
 # SIMD DETECTOR -------------------------------------------------------------
@@ -75,7 +92,9 @@ if(NOT BLOKK_MACRO_FILE)
                 break()
             else()
                 # GCC/Clang can stack multiple active vector extensions simultaneously
-                list(APPEND ACCUMULATED_FLAGS "${FLAG_VALUE}")
+                # Some entries hold several space-separated flags, split them into separate arguments
+                separate_arguments(FLAG_LIST NATIVE_COMMAND "${FLAG_VALUE}")
+                list(APPEND ACCUMULATED_FLAGS ${FLAG_LIST})
                 list(APPEND ACCUMULATED_MACROS "${MACRO_NAME}")
             endif()
         endif()

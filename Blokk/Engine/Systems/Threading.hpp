@@ -48,7 +48,7 @@ public:
             Lock.unlock();
 
             // Same function + same manager for everyone
-            (Manager->*CurrentJob)(this);
+            (Manager->*CurrentJob)(*this);
 
             // Tell manager we're finished
             {
