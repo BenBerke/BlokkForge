@@ -27,6 +27,8 @@ target_link_libraries(Blokk
         xsimd
         imgui
         BFCL
+        glfw
+        glad
 )
 
 # SIMD DETECTOR -------------------------------------------------------------

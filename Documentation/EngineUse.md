@@ -701,8 +701,5 @@ Now that you have a basic Blokk project running, the following documentation cov
 
 * [GameObject Functions](GameObjectFunctions.md) — Complete list of `GameObject` functions.
 * [Engine Architecture](EngineArchitecture.md) — How Blokk internally manages and processes objects.
-* [Configuration Macros](ConfigurationMacros.md) — Explains available configuration options, including camera, render culling, threading, diagnostics, and rendering.
+* [Configurations](Configurations.md) — Explains available configuration options, including camera, render culling, threading, diagnostics, and rendering.
 * [Camera](Camera.md) — Learn how to use Blokk's camera system.
-* [Render Culling Systems](RenderCullingSystems.md) — Learn about Blokk's available visibility-culling systems.
-* [Thread Control](ThreadControl.md) — Learn how to control the engine's threading system.
-* [Diagnostics](Diagnostics.md) — Learn how to inspect engine diagnostics.

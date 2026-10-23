@@ -18,6 +18,21 @@ add_subdirectory(vendored/SDL)
 # SDL_image
 add_subdirectory(vendored/SDL_image)
 
+# GLFW - Turn off unwanted targets to keep compilation fast
+set(GLFW_BUILD_DOCS OFF CACHE INTERNAL "")
+set(GLFW_BUILD_TESTS OFF CACHE INTERNAL "")
+set(GLFW_BUILD_EXAMPLES OFF CACHE INTERNAL "")
+add_subdirectory(vendored/glfw)
+
+# Glad - GLFW loader
+add_library(glad STATIC
+    vendored/glad/src/glad.c
+)
+target_include_directories(glad
+    PUBLIC
+        ${CMAKE_CURRENT_SOURCE_DIR}/vendored/glad/include
+)
+
 # Imgui
 add_library(imgui STATIC
     vendored/imgui/imgui.cpp
